@@ -1,6 +1,6 @@
 name: Build MP280 APK
 
-on:
+"on":
   workflow_dispatch:
 
 jobs:
@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download project ZIP
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Extract project
