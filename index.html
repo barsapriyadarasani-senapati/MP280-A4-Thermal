@@ -1,172 +1,317 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A4 to Thermal Printer</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<title>Thermal Print Tool</title>
 
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-    }
+<style>
+*{box-sizing:border-box}
 
-    h1 {
-      text-align: center;
-    }
+body{
+  margin:0;
+  padding:15px;
+  background:#eee;
+  font-family:Arial,sans-serif;
+}
 
-    .box {
-      max-width: 600px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-    }
+.box{
+  max-width:600px;
+  margin:auto;
+  background:white;
+  padding:18px;
+  border-radius:12px;
+}
 
-    input, button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 12px;
-      font-size: 16px;
-    }
+h1{
+  text-align:center;
+  font-size:28px;
+}
 
-    button {
-      background: black;
-      color: white;
-      border: none;
-      border-radius: 6px;
-    }
+textarea{
+  width:100%;
+  min-height:160px;
+  padding:12px;
+  font-size:18px;
+  resize:vertical;
+  border:1px solid #aaa;
+  border-radius:6px;
+}
 
-    #preview {
-      margin-top: 20px;
-      background: white;
-      overflow: auto;
-    }
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
 
-    canvas {
-      max-width: 100%;
-      border: 1px solid #ddd;
-    }
-  </style>
+button,input{
+  width:100%;
+  padding:13px;
+  margin-top:10px;
+  font-size:16px;
+}
+
+button{
+  background:#000;
+  color:white;
+  border:0;
+  border-radius:6px;
+}
+
+.preview{
+  width:48mm;
+  margin:20px auto;
+  background:white;
+  color:black;
+  overflow-wrap:break-word;
+}
+
+.previewText{
+  white-space:pre-wrap;
+  font-size:18px;
+  line-height:1.25;
+  text-align:left;
+}
+
+.preview img{
+  display:block;
+  width:48mm;
+  height:auto;
+  margin-top:8px;
+}
+</style>
 </head>
 
 <body>
 
 <div class="box">
 
-  <h1>A4 → Thermal Printer</h1>
+<h1>🖨️ Thermal Print</h1>
 
-  <input type="file" id="fileInput" accept="image/*,.pdf">
+<label><b>Write what you want to print:</b></label>
 
-  <button onclick="printPage()">Print</button>
+<textarea id="text"
+placeholder="Type your text here...
 
-  <div id="preview"></div>
+Example:
+DESANDH POST OFFICE
+SB ACCOUNT
+PPF
+RPLI
+Contact: 1234567890"></textarea>
+
+<div class="controls">
+
+<button onclick="setAlign('left')">⬅ Left</button>
+<button onclick="setAlign('center')">↔ Center</button>
+
+<button onclick="makeBold()">B Bold</button>
+<button onclick="changeSize()">A+ Size</button>
+
+</div>
+
+<label><b>Add an image/document:</b></label>
+
+<input
+type="file"
+id="file"
+accept="image/*">
+
+<div id="preview" class="preview">
+
+<div id="previewText" class="previewText">
+</div>
+
+</div>
+
+<button onclick="printThermal()">
+🖨️ PRINT
+</button>
 
 </div>
 
 <script>
 
-const fileInput = document.getElementById("fileInput");
-const preview = document.getElementById("preview");
+const textBox=document.getElementById("text");
+const previewText=document.getElementById("previewText");
+const fileInput=document.getElementById("file");
+const preview=document.getElementById("preview");
 
-let image = null;
+let bold=false;
+let fontSize=18;
+let align="left";
 
-fileInput.addEventListener("change", function () {
+function updatePreview(){
 
-  const file = this.files[0];
+previewText.textContent=textBox.value;
 
-  if (!file) return;
+previewText.style.fontWeight=
+bold ? "bold" : "normal";
 
-  if (file.type.startsWith("image/")) {
+previewText.style.fontSize=
+fontSize+"px";
 
-    const reader = new FileReader();
+previewText.style.textAlign=align;
 
-    reader.onload = function(e) {
+}
 
-      image = new Image();
+textBox.addEventListener("input",updatePreview);
 
-      image.onload = function() {
+function setAlign(value){
 
-        preview.innerHTML = "";
-        preview.appendChild(image);
+align=value;
+updatePreview();
 
-        image.style.width = "100%";
-      };
+}
 
-      image.src = e.target.result;
-    };
+function makeBold(){
 
-    reader.readAsDataURL(file);
+bold=!bold;
+updatePreview();
 
-  } else {
+}
 
-    alert("For now, select an image file. PDF support will be added next.");
+function changeSize(){
 
-  }
+fontSize+=2;
+
+if(fontSize>30){
+fontSize=14;
+}
+
+updatePreview();
+
+}
+
+fileInput.addEventListener("change",function(){
+
+const file=this.files[0];
+
+if(!file)return;
+
+if(!file.type.startsWith("image/")){
+alert("Please select an image.");
+return;
+}
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+
+let old=document.getElementById("printImage");
+
+if(old)old.remove();
+
+const img=document.createElement("img");
+
+img.id="printImage";
+img.src=e.target.result;
+
+preview.appendChild(img);
+
+};
+
+reader.readAsDataURL(file);
 
 });
 
+function printThermal(){
 
-function printPage() {
+if(!textBox.value.trim() && !document.getElementById("printImage")){
 
-  if (!image) {
-    alert("Please select an image first.");
-    return;
-  }
+alert("Please type something or select an image.");
 
-  const printWindow = window.open("", "_blank");
-
-  printWindow.document.write(`
-    <html>
-    <head>
-
-      <style>
-
-        @page {
-          size: auto;
-          margin: 0;
-        }
-
-        body {
-          margin: 0;
-          padding: 0;
-        }
-
-        img {
-          width: 100%;
-          height: auto;
-          display: block;
-        }
-
-      </style>
-
-    </head>
-
-    <body>
-
-      <img src="${image.src}">
-
-      <script>
-
-        window.onload = function() {
-          window.print();
-        };
-
-      <\/script>
-
-    </body>
-    </html>
-  `);
-
-  printWindow.document.close();
+return;
 
 }
+
+const printWindow=window.open("","_blank");
+
+const text=previewText.outerHTML;
+
+const img=document.getElementById("printImage");
+
+const imageHTML=img
+? `<img src="${img.src}">`
+: "";
+
+printWindow.document.write(`
+
+<html>
+
+<head>
+
+<style>
+
+@page{
+size:48mm auto;
+margin:0;
+}
+
+html,body{
+margin:0;
+padding:0;
+width:48mm;
+}
+
+body{
+font-family:Arial,sans-serif;
+color:#000;
+}
+
+.printArea{
+width:48mm;
+padding:2mm;
+}
+
+img{
+display:block;
+width:44mm;
+height:auto;
+margin-top:2mm;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="printArea">
+
+${text}
+
+${imageHTML}
+
+</div>
+
+<script>
+
+window.onload=function(){
+
+setTimeout(function(){
+
+window.print();
+
+},500);
+
+};
+
+<\/script>
+
+</body>
+
+</html>
+
+`);
+
+printWindow.document.close();
+
+}
+
+updatePreview();
 
 </script>
 
